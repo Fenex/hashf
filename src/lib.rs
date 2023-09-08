@@ -1,13 +1,16 @@
-const ZEROED: [u8; 32] = [0u8; 32];
+const SHA256_LENGTH_BYTES: usize = 32;
+const SHA256_LENGTH_CHARS: usize = SHA256_LENGTH_BYTES * 2;
+
+const ZEROED: [u8; SHA256_LENGTH_BYTES] = [0u8; SHA256_LENGTH_BYTES];
 
 #[inline(always)]
 pub fn is_zero_terminated(hash: &[u8], count: usize) -> bool {
-    assert_eq!(hash.len(), 32);
-    assert!(0 < count && count <= 64);
+    assert_eq!(hash.len(), SHA256_LENGTH_BYTES);
+    assert!(0 < count && count <= SHA256_LENGTH_CHARS);
 
     let count_bytes = count / 2;
-    if hash[32 - count_bytes..] == ZEROED[..count_bytes] {
-        !(count % 2 == 1 && hash[32 - 1 - count_bytes] % 16 != 0)
+    if hash[SHA256_LENGTH_BYTES - count_bytes..] == ZEROED[..count_bytes] {
+        !(count % 2 == 1 && hash[SHA256_LENGTH_BYTES - 1 - count_bytes] % 16 != 0)
     } else {
         false
     }
