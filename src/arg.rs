@@ -3,7 +3,7 @@ use ::clap::Parser;
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 pub struct Args {
-    #[clap(short = 'N', help = "How many tail zeroes should hash cointains.")]
+    #[clap(short = 'N', help = "How many tail zeroes should hash contains.")]
     #[arg(value_parser = clap::value_parser!(u8).range(1..=64))]
     pub count_zeroes: u8,
     #[clap(short = 'F', help = "How many hashes required to be find.")]
