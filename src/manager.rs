@@ -1,5 +1,6 @@
 use super::*;
 
+/// chain-builder for Manager actor.
 #[derive(Debug, Clone, Default)]
 pub struct ManagerBuilder {
     workers_count: Option<usize>,
@@ -54,7 +55,7 @@ pub struct Manager {
 }
 
 impl Manager {
-    /// Workers will be find required hashes in blocks with this size
+    /// Workers will find required hashes in blocks with this range length
     const BLOCK_SIZE: usize = 100000;
 }
 
@@ -87,16 +88,24 @@ impl Handler<WorkerReady> for Manager {
     fn handle(&mut self, msg: WorkerReady, ctx: &mut Self::Context) -> Self::Result {
         trace!("[H] START Manager::WorkerReady: {:?}", msg);
         if let WorkerReady(Some(range)) = msg {
+            // worker has finished a block, so we need marks this block as finished
             let index = (range.start / Self::BLOCK_SIZE as u128) as usize;
             self.blocks_calc[index] = BlockStatus::Finished;
         }
+
         if self.hashes_found.len() < self.records {
+            // number of founded required hashes is less than we need
+            // allocate new block and send to worker one
             let digit_start = (self.blocks_calc.len() * Self::BLOCK_SIZE) as u128;
             self.blocks_calc.push(BlockStatus::Started);
             self.workers.as_ref().unwrap().do_send(SearchInsideRange(
                 digit_start..Self::BLOCK_SIZE as u128 + digit_start,
             ));
         } else if !self.blocks_calc.iter().any(|&x| x == BlockStatus::Started) {
+            // if:
+            //  - 1: we found required number of hashes (or maybe even more)
+            //  - 2: all workers has finished its job
+            // we stop this actor
             ctx.stop();
         }
         trace!("[H] STOP Manager::WorkerReady");
